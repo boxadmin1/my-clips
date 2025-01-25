@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: auto;
+        }
+        .container {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            width: 600px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        #userData {
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 70vh;
+            overflow-y: scroll;
+        }
+        #ipInfo {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="ipInfo"></div>
+        <div id="userData"></div>
+    </div>
+    <script>
+        async function getUserData() {
+            // Fetch the user's public IP address
+            let ipData = await fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => data.ip)
+                .catch(() => 'Not available');
+
+            // Fetch IP info for location (state and country)
+            let locationData = await fetch(`https://ipinfo.io/${ipData}/json`)
+                .then(response => response.json())
+                .then(data => data)
+                .catch(() => null);
+
+            // Display the IP address at the top
+            document.getElementById('ipInfo').innerText = `Your IP: ${ipData}`;
+
+            // Only show state and country
+            const stateCountryText = locationData ? `${locationData.region}, ${locationData.country}` : 'State and Country Not Available';
+
+            // Collect the local data
+            const data = {
+                "User IP Address": ipData,
+                "State and Country": stateCountryText,
+                "User Agent": navigator.userAgent,
+                "Browser Name": navigator.appName,
+                "Browser Version": navigator.appVersion,
+                "Language": navigator.language,
+                "Platform": navigator.platform,
+                "Online Status": navigator.onLine ? "Online" : "Offline",
+                "Screen Width": window.screen.width,
+                "Screen Height": window.screen.height,
+                "Screen Color Depth": window.screen.colorDepth,
+                "Screen Pixel Depth": window.screen.pixelDepth,
+                "Time Zone": Intl.DateTimeFormat().resolvedOptions().timeZone,
+                "Document Referrer": document.referrer || "No Referrer",
+                "URL": window.location.href,
+                "Current Date & Time": new Date().toString(),
+                "Navigator Cookies Enabled": navigator.cookieEnabled ? "Yes" : "No",
+                "Window Inner Width": window.innerWidth,
+                "Window Inner Height": window.innerHeight,
+                "Max Touch Points": navigator.maxTouchPoints || "Not available",
+                "Device Memory": navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Not available",
+                "Battery Status": "Battery API Not Available",
+            };
+
+            if (navigator.getBattery) {
+                navigator.getBattery().then(function(battery) {
+                    data["Battery Status"] = `Charging: ${battery.charging}, Level: ${(battery.level * 100).toFixed(0)}%`;
+                    updateDataDisplay(data);
+                }).catch(function() {
+                    updateDataDisplay(data);
+                });
+            } else {
+                updateDataDisplay(data);
+            }
+        }
+
+        function updateDataDisplay(data) {
+            let userDataHtml = '';
+            for (const [key, value] of Object.entries(data)) {
+                userDataHtml += `<p><strong>${key}:</strong> ${value}</p>`;
+            }
+
+            document.getElementById("userData").innerHTML = userDataHtml;
+        }
+
+        // Initialize the data display
+        getUserData();
+    </script>
+</body>
+</html>
